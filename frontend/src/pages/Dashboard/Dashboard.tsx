@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../contextApi/AuthContext";
-import { JobService, JobApplication } from "../services/job.service";
-import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, Search, PlusCircle } from "lucide-react";
+import { useAuth } from "../../contextApi/AuthContext";
+import { JobService, JobApplication } from "../../services/job.service";
+import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Stats {

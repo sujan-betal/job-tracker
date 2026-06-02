@@ -1,14 +1,15 @@
+import React from "react";
 import { BrowserRouter } from "react-router-dom";
-import AdminLayout from "./layouts/AdminLayout";
+import { AuthProvider } from "./contextApi/AuthContext";
 import AppRoutes from "./routes/AppRoutes";
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <AdminLayout>
+    <AuthProvider>
+      <BrowserRouter>
         <AppRoutes />
-      </AdminLayout>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 

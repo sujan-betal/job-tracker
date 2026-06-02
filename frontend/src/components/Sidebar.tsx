@@ -4,7 +4,7 @@ import NavItem             from "./NavItem";
 import { useSidebar }      from "./useSidebar";
 import { NAV_ITEMS }       from "./Sidebar.constants";
 import type { SidebarProps } from "./Sidebar.types";
-import { useAuth } from "../../contextApi/AuthContext";
+import { useAuth } from "../contextApi/AuthContext";
 
 const Sidebar = ({}: SidebarProps) => {
   const { isActive, handleNavClick } = useSidebar();

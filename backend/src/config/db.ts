@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 export const sequelize = new Sequelize(
@@ -11,16 +12,28 @@ export const sequelize = new Sequelize(
         port: Number(process.env.DB_PORT || 3306),
         dialect: "mysql",
         logging: false,
+
+        pool: {
+            max: 10,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+        },
     }
 );
 
-export const connectDB = async () => {
+export const connectDB = async (): Promise<void> => {
     try {
         await sequelize.authenticate();
-        await sequelize.sync({ alter: true });
-        console.log("Database Connected successfully to MySQL!");
+        console.log("✅ MySQL connected successfully");
+
+        // ⚠️ Only for development
+        if (process.env.NODE_ENV !== "production") {
+            await sequelize.sync({ alter: true });
+            console.log("🔄 Models synced");
+        }
     } catch (error) {
-        console.error("Database connection failed:", error);
-        // Let's not call process.exit(1) so the dev server doesn't crash repeatedly during setup if DB isn't running yet
+        console.error("❌ Database connection failed:", error);
+        throw error;
     }
 };

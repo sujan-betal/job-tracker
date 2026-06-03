@@ -5,58 +5,72 @@ import User from "../models/user.model.js";
 import { StatusCode } from "../utils/statusCodes.js";
 import { apiResponseSuccess, apiResponseErr } from "../utils/apiResponse.js";
 
-export const register = async (req: Request, res: Response) => {
-    try {
-        const { name, email, password } = req.body;
+export const register = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { name, email, password } = req.body;
 
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            return apiResponseErr(
-                null,
-                false,
-                StatusCode.conflict,
-                "Email already registered",
-                res
-            );
-        }
+    const existingUser = await User.findOne({
+      where: { email },
+    });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-        }) as any;
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET!,
-            { expiresIn: "7d" }
-        );
-
-        return apiResponseSuccess(
-            {
-                token,
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                },
-            },
-            true,
-            StatusCode.created,
-            "User registered successfully",
-            res
-        );
-    } catch (error: any) {
-        return apiResponseErr(
-            null,
-            false,
-            StatusCode.internalServerError,
-            error.message || "Something went wrong during registration",
-            res
-        );
+    if (existingUser) {
+      return apiResponseErr(
+        null,
+        false,
+        StatusCode.conflict,
+        "Email already registered",
+        res
+      );
     }
+
+    const hashedPassword = await bcrypt.hash(
+      password,
+      10
+    );
+
+    const user: any = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return apiResponseSuccess(
+      {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      },
+      true,
+      StatusCode.created,
+      "User registered successfully",
+      res
+    );
+  } catch (error: any) {
+    return apiResponseErr(
+      null,
+      false,
+      StatusCode.internalServerError,
+      "something went wrong",
+      res
+    );
+  }
 };
 
 export const login = async (req: Request, res: Response) => {

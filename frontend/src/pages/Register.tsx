@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contextApi/AuthContext";
-import { AuthService } from "../services/auth.service";
+// import { AuthService } from "../services/auth.service";
+import { registerUser  } from "../services/apiServices";
+import useApiCall from "../hooks/useApiCall";
 import { 
   Eye, EyeOff, Lock, Mail, User, AlertCircle, 
   Sparkles, ArrowRight, Zap, Code2, MessageCircle 
@@ -10,6 +12,7 @@ import {
 const Register = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { callApi } = useApiCall(); 
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,7 +28,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await AuthService.register(name, email, password);
+      const response = await registerUser(callApi, { name, email, password });
       if (response.success) {
         login(response.data.token, response.data.user);
         navigate("/");

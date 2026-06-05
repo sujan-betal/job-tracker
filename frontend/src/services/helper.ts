@@ -54,13 +54,15 @@ export const makeCall = async (
     }
 
     if (response.status === 401 || json?.responseCode === 401) {
+      if (window.location.pathname !== "/login") {
       try {
         dispatch?.({ type: "LOG_OUT" });
       } catch (e) {
         console.warn("Logout failed", e);
       }
       window.location.href = "/login";
-      return null;
+    }
+      return json;
     }
 
     if (json?.success === false) {
@@ -83,11 +85,9 @@ export const makeCall = async (
     clearTimeout(timer);
 
     if (err.name === "AbortError") {
-      if (showToast) console.info("Request timeout. Please try again.");
+      return { success: false, message: "Request timeout. Please try again." };
     } else {
-      if (showToast) console.info(err.message || "Network error");
+      return { success: false, message: err.message || "Network error" };
     }
-
-    throw err;
   }
 };

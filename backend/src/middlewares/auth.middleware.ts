@@ -57,6 +57,7 @@ export const authenticate = async (
 
     next();
   } catch (error) {
+    console.error("❌ Auth Error:", error);  // ← ye add karo
     return apiResponseErr(
       null,
       false,

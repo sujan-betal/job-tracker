@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Application from "../models/application.model.js";
 import { StatusCode } from "../utils/statusCodes.js";
 import { apiResponseSuccess, apiResponseErr } from "../utils/apiResponse.js";
+import * as applicationService from "../services/application.service.js";
 
 export const register = async (
   req: Request,
@@ -164,3 +166,179 @@ export const getProfile = async (req: Request, res: Response) => {
         );
     }
 };
+
+export const addApplication = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const { company, position, location, salary, appliedDate, jobUrl, notes } = req.body;
+
+        const existingApplication = await Application.findOne({
+            where: { userId, company, position }
+        });
+
+        if (existingApplication) {
+            return apiResponseErr(
+                null,
+                false,
+                StatusCode.conflict,
+                "Application already exists",
+                res
+            );
+        }
+
+        const data = await Application.create({
+            userId,
+            company,
+            position,
+            location,
+            salary,
+            appliedDate,
+            jobUrl,
+            notes,
+        })as any;
+
+        return apiResponseSuccess(
+            {
+                id:          data.id,
+                userId:      data.userId,
+                company:     data.company,
+                position:    data.position,
+                location:    data.location,
+                salary:      data.salary,
+                appliedDate: data.appliedDate,
+                status:      data.status,
+                jobUrl:      data.jobUrl,
+                notes:       data.notes,
+                createdAt:   data.createdAt,
+            },
+            true,
+            StatusCode.created,
+            "Application added successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("Error in addApplication:", error);
+        return apiResponseErr(
+            null,
+            false,
+            StatusCode.internalServerError,
+            "Something went wrong",
+            res
+        );
+    }
+};
+
+// export const getAllApplications = async (req: Request, res: Response) => {
+//     try {
+//         const userId = req.user.id;
+//         const apps = await applicationService.getAllApplications(userId);
+//         return apiResponseSuccess(
+//             apps,
+//             true,
+//             StatusCode.success,
+//             "Applications fetched successfully",
+//             res
+//         );
+//     } catch (error: any) {
+//         return apiResponseErr(
+//             null,
+//             false,
+//             StatusCode.internalServerError,
+//             error.message || "Failed to fetch applications",
+//             res
+//         );
+//     }
+// };
+
+// export const getRecentApplications = async (req: Request, res: Response) => {
+//     try {
+//         const userId = req.user.id;
+//         const apps = await applicationService.getRecentApplications(userId);
+//         return apiResponseSuccess(
+//             apps,
+//             true,
+//             StatusCode.success,
+//             "Recent applications fetched successfully",
+//             res
+//         );
+//     } catch (error: any) {
+//         return apiResponseErr(
+//             null,
+//             false,
+//             StatusCode.internalServerError,
+//             error.message || "Failed to fetch recent applications",
+//             res
+//         );
+//     }
+// };
+
+// export const getDashboardStats = async (req: Request, res: Response) => {
+//     try {
+//         const userId = req.user.id;
+//         const stats = await applicationService.getDashboardStats(userId);
+//         return apiResponseSuccess(
+//             stats,
+//             true,
+//             StatusCode.success,
+//             "Dashboard stats fetched successfully",
+//             res
+//         );
+//     } catch (error: any) {
+//         return apiResponseErr(
+//             null,
+//             false,
+//             StatusCode.internalServerError,
+//             error.message || "Failed to fetch dashboard stats",
+//             res
+//         );
+//     }
+// };
+
+// export const updateApplication = async (req: Request, res: Response) => {
+//     try {
+//         const userId = req.user.id;
+//         const appId = Number(req.params.id);
+//         const updated = await applicationService.updateApplication(appId, userId, req.body);
+//         return apiResponseSuccess(
+//             updated,
+//             true,
+//             StatusCode.success,
+//             "Application updated successfully",
+//             res
+//         );
+//     } catch (error: any) {
+//         const statusCode = error.message === "Application not found" ? StatusCode.notFound : StatusCode.internalServerError;
+//         return apiResponseErr(
+//             null,
+//             false,
+//             statusCode,
+//             error.message || "Failed to update application",
+//             res
+//         );
+//     }
+// };
+
+// export const deleteApplication = async (req: Request, res: Response) => {
+//     try {
+//         const userId = req.user.id;
+//         const appId = Number(req.params.id);
+//         const result = await applicationService.deleteApplication(appId, userId);
+//         return apiResponseSuccess(
+//             result,
+//             true,
+//             StatusCode.success,
+//             "Application deleted successfully",
+//             res
+//         );
+//     } catch (error: any) {
+//         const statusCode = error.message === "Application not found" ? StatusCode.notFound : StatusCode.internalServerError;
+//         return apiResponseErr(
+//             null,
+//             false,
+//             statusCode,
+//             error.message || "Failed to delete application",
+//             res
+//         );
+//     }
+// };
+

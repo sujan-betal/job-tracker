@@ -11,10 +11,12 @@ export const addApplication = async (
 };
 
 export const getAllApplications = async (userId: number): Promise<IApplication[]> => {
+    console.log(`📡 DB Query: Fetching applications for userId ${userId}`);
     const applications = await Application.findAll({
         where: { userId },
         order: [["createdAt", "DESC"]],
     });
+    console.log(`📡 DB Result: ${applications.length} rows found`);
     return applications as unknown as IApplication[];
 };
 
@@ -28,10 +30,13 @@ export const getRecentApplications = async (userId: number): Promise<IApplicatio
 };
 
 export const getDashboardStats = async (userId: number): Promise<IDashboardStats> => {
+    console.log(`📊 DB Query: Fetching stats for userId ${userId}`);
     const total = await Application.count({ where: { userId } });
     const inProgress = await Application.count({ where: { userId, status: "in_progress" } });
     const reviews = await Application.count({ where: { userId, status: "review" } });
     const offers = await Application.count({ where: { userId, status: "offer" } });
+
+    console.log(`📊 DB Result: Total=${total}, InProgress=${inProgress}, Reviews=${reviews}, Offers=${offers}`);
 
     return {
         total_applied: total,

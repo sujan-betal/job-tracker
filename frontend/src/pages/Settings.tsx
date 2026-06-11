@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../contextApi/AuthContext";
 import { User, Mail, Shield, LogOut, Key } from "lucide-react";
+import LogoutConfirmModal from "../components/modals/LogoutConfirmModal";
 
 const Settings = () => {
   const { user, logout } = useAuth();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#080B10] text-slate-200 p-8 px-6 md:px-12 font-sans relative overflow-hidden">
@@ -86,13 +88,16 @@ const Settings = () => {
             </div>
 
             {/* Logout button */}
+            <>
             <button
-              onClick={logout}
+              onClick={() => setIsLogoutOpen(true)}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98]"
             >
               <LogOut size={16} />
               Sign Out of Tracker
             </button>
+            <LogoutConfirmModal isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} onConfirm={logout} />
+            </>
           </div>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { JobService, JobApplication } from "../services/job.service";
 import { Search, Plus, Edit2, Trash2, ExternalLink, Calendar, MapPin, DollarSign, Briefcase } from "lucide-react";
-import AddJobModal from "../components/AddJobModal";
-import EditJobModal from "../components/EditJobModal";
-import DeleteConfirmModal from "../components/DeleteConfirmModal";
+import AddJobModal from "../components/modals/AddJobModal";
+import EditJobModal from "../components/modals/EditJobModal";
+import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 
 const Applications = () => {
   const [jobs, setJobs] = useState<JobApplication[]>([]);

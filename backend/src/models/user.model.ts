@@ -8,10 +8,12 @@ const User = sequelize.define(
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
+            field: "id",
         },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
+            field: "name",
         },
         email: {
             type: DataTypes.STRING,
@@ -20,16 +22,20 @@ const User = sequelize.define(
             validate: {
                 isEmail: true,
             },
+            field: "email",
         },
         password: {
             type: DataTypes.STRING,
             allowNull: false,
+            field: "password",
         },
     },
     {
         timestamps: true,
         createdAt: "createdAt",
         updatedAt: "updatedAt",
+        freezeTableName: true,
+        tableName: "users",
     }
 );
 

@@ -4,7 +4,9 @@ import User from "../models/user.model.js";
 import { StatusCode } from "../utils/statusCodes.js";
 import { apiResponseErr } from "../utils/apiResponse.js";
 
-export const authenticate = async (
+export const 
+
+authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -43,6 +45,7 @@ export const authenticate = async (
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
+      console.log(`❌ Auth: User not found in DB for id ${decoded.id}`);
       return apiResponseErr(
         null,
         false,
@@ -52,6 +55,7 @@ export const authenticate = async (
       );
     }
 
+    console.log(`✅ Auth: User ${(user as any).email} (id: ${(user as any).id}) authenticated`);
     // req.user me actual DB user store karo
     req.user = user;
 

@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import User from "./user.model.js";
 
 const Application = sequelize.define(
     "Application",
@@ -13,6 +12,7 @@ const Application = sequelize.define(
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            field: "user_id",
         },
         company: {
             type: DataTypes.STRING,
@@ -38,10 +38,12 @@ const Application = sequelize.define(
         appliedDate: {
             type: DataTypes.DATEONLY,
             allowNull: false,
+            field: "applied_date",
         },
         jobUrl: {
             type: DataTypes.TEXT,
             allowNull: true,
+            field: "job_url",
         },
         notes: {
             type: DataTypes.TEXT,
@@ -52,10 +54,9 @@ const Application = sequelize.define(
         timestamps: true,
         createdAt: "createdAt",
         updatedAt: "updatedAt",
+        freezeTableName: true,
+        tableName: "applications",
     }
 );
-
-User.hasMany(Application, { foreignKey: "userId" });
-Application.belongsTo(User, { foreignKey: "userId" });
 
 export default Application;

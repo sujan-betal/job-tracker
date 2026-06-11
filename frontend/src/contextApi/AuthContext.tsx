@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import axios from "axios";
+import JOBTRACKER_URLS from "../constants/urlConstants";
+import { getCallParams, makeCall } from "../services/helper";
 
 interface User {
   id: number;
@@ -18,8 +19,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -36,21 +35,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Proactively fetch latest profile to verify token validity
         try {
-          const response = await axios.get(`${API_BASE_URL}/auth/profile`, {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          });
-          if (response.data.success) {
-            const freshUser = response.data.data;
+          const params = getCallParams("GET", null, true, storedToken);
+          const response = await makeCall(JOBTRACKER_URLS.PROFILE, params, false);
+          
+          if (response && response.success) {
+            const freshUser = response.data;
             setUser(freshUser);
             localStorage.setItem("user", JSON.stringify(freshUser));
+          } else {
+            console.warn("Session invalid, logging out");
+            logout();
           }
         } catch (error) {
           console.error("Token verification failed, logging out", error);
-          // Token expired or invalid
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setToken(null);
-          setUser(null);
+          logout();
         }
       }
       setLoading(false);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../contextApi/AuthContext";
 import { JobService, JobApplication } from "../services/job.service";
 import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, Search, PlusCircle } from "lucide-react";
+import AddJobModal from "../components/modals/AddJobModal";
 import { useNavigate } from "react-router-dom";
 
 interface Stats {
@@ -20,25 +21,66 @@ const Dashboard = () => {
     reviews: 0,
     offers: 0,
   });
-  const [recentJobs, setRecentJobs] = useState<JobApplication[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
+    const token = localStorage.getItem("token");
+    console.log("🚀 [Dashboard] fetchDashboardData called. Token exists:", !!token);
+    
+    if (!token) {
+      console.error("❌ [Dashboard] No token found in localStorage!");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    // Fetch Stats independently
+    const fetchStats = async () => {
       try {
-        const [statsRes, recentRes] = await Promise.all([
-          JobService.getStats(),
-          JobService.getRecent(),
-        ]);
-        if (statsRes.success) setStats(statsRes.data);
-        if (recentRes.success) setRecentJobs(recentRes.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
+        const res = await JobService.getStats();
+        console.log("📊 [Dashboard] Stats Raw Response:", res);
+        if (res && res.success) {
+          setStats(res.data);
+          console.log("✅ [Dashboard] Stats updated");
+        }
+      } catch (err) {
+        console.error("❌ [Dashboard] Stats fetch error:", err);
       }
     };
 
+    // Fetch Applications independently
+    const fetchApps = async () => {
+      try {
+        const res = await JobService.getAll();
+        console.log("📋 [Dashboard] Apps Raw Response:", res);
+        
+        if (res && res.success) {
+          let data = res.data;
+          // If data is an object with a 'rows' property (common in Sequelize findAndCountAll)
+          if (data && !Array.isArray(data) && Array.isArray(data.rows)) {
+            data = data.rows;
+          }
+          
+          const finalData = Array.isArray(data) ? data : [];
+          console.log(`✅ [Dashboard] Setting ${finalData.length} applications`);
+          setApplications(finalData);
+        } else {
+          console.warn("⚠️ [Dashboard] Apps fetch success was false or res null", res);
+        }
+      } catch (err) {
+        console.error("❌ [Dashboard] Apps fetch error:", err);
+      }
+    };
+
+    await Promise.allSettled([fetchStats(), fetchApps()]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    console.log("📌 Dashboard Component (src/pages/Dashboard.tsx) Mounted");
     fetchDashboardData();
   }, []);
 
@@ -99,7 +141,7 @@ const Dashboard = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/applications")}
+            onClick={() => setIsAddOpen(true)}
             className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-200 active:scale-[0.98]"
           >
             <PlusCircle size={16} />
@@ -167,17 +209,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Applications Section */}
+      {/* All Applications Section */}
       <div className="bg-[#0E131F]/80 backdrop-blur-md border border-[#1E293B] rounded-2xl overflow-hidden shadow-xl">
         <div className="p-6 border-b border-[#1A2333] flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Recent Applications</h2>
-          <button 
-            onClick={() => navigate("/applications")}
-            className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors group"
-          >
-            View all
-            <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
+          <h2 className="text-xl font-bold text-white">All Applications</h2>
+          <div className="text-xs font-semibold text-slate-500">
+            Showing {applications.length} applications
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -193,7 +231,7 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1A2333] text-sm text-slate-300">
-              {recentJobs.length === 0 ? (
+              {applications.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
@@ -205,7 +243,7 @@ const Dashboard = () => {
                         Start tracking your job search by adding your very first job application.
                       </p>
                       <button
-                        onClick={() => navigate("/applications")}
+                        onClick={() => setIsAddOpen(true)}
                         className="mt-4 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 font-semibold text-xs rounded-xl border border-purple-500/20 transition-all active:scale-[0.98]"
                       >
                         Add Job Application
@@ -214,7 +252,7 @@ const Dashboard = () => {
                   </td>
                 </tr>
               ) : (
-                recentJobs.map((job) => (
+                applications.map((job) => (
                   <tr key={job.id} className="hover:bg-white/[0.01] transition-colors group">
                     <td className="px-6 py-4 font-semibold text-white group-hover:text-purple-400 transition-colors">
                       {job.company}
@@ -236,6 +274,7 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
+      <AddJobModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSuccess={fetchDashboardData} />
     </div>
   );
 };

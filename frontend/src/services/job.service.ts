@@ -1,15 +1,13 @@
-import axios from "axios";
+import { getCallParams, makeCall } from "./helper";
+import JOBTRACKER_URLS from "../constants/urlConstants";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-const getHeaders = () => {
+const apiCall = async (url: string, method: string = "GET", body: any = null) => {
   const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  };
+  const params = getCallParams(method, body, true, token || undefined);
+  console.log(`🌐 [apiCall] ${method} ${url}`, { body, hasToken: !!token });
+  return await makeCall(url, params, false);
 };
 
 export interface JobApplication {
@@ -28,32 +26,27 @@ export interface JobApplication {
 
 export const JobService = {
   getAll: async () => {
-    const response = await axios.get(`${API_BASE_URL}/applications`, getHeaders());
-    return response.data;
+    return await apiCall(JOBTRACKER_URLS.GET_ALL_APPLICATIONS, "GET");
   },
 
   getRecent: async () => {
-    const response = await axios.get(`${API_BASE_URL}/applications/recent`, getHeaders());
-    return response.data;
+    return await apiCall(JOBTRACKER_URLS.GET_RECENT, "GET");
   },
 
   getStats: async () => {
-    const response = await axios.get(`${API_BASE_URL}/applications/stats`, getHeaders());
-    return response.data;
+    return await apiCall(JOBTRACKER_URLS.GET_STATS, "GET");
   },
 
   create: async (data: Omit<JobApplication, "id">) => {
-    const response = await axios.post(`${API_BASE_URL}/applications`, data, getHeaders());
-    return response.data;
+    // Attempting the most standard path first
+    return await apiCall(JOBTRACKER_URLS.ADD_APPLICATION, "POST", data);
   },
 
-  update: async (id: number, data: Partial<JobApplication>) => {
-    const response = await axios.put(`${API_BASE_URL}/applications/${id}`, data, getHeaders());
-    return response.data;
+  update: async (id: number | string, data: Partial<JobApplication>) => {
+    return await apiCall(JOBTRACKER_URLS.UPDATE_APPLICATION(id), "PUT", data);
   },
 
-  delete: async (id: number) => {
-    const response = await axios.delete(`${API_BASE_URL}/applications/${id}`, getHeaders());
-    return response.data;
+  delete: async (id: number | string) => {
+    return await apiCall(JOBTRACKER_URLS.DELETE_APPLICATION(id), "DELETE");
   },
 };

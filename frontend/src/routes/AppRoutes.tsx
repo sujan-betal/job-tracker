@@ -5,7 +5,8 @@ import AdminLayout from "../layouts/AdminLayout";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
-import Applications from "../pages/Applications";
+// Applications page deprecated — keep file but redirect route to Dashboard
+// import Applications from "../pages/Applications";
 import Interviews from "../pages/Interviews";
 import Offers from "../pages/Offers";
 import Contacts from "../pages/Contacts";
@@ -30,16 +31,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/applications"
-        element={
-          <ProtectedRoute>
-            <AdminLayout>
-              <Applications />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/applications" element={<Navigate to="/" replace />} />
       <Route
         path="/interviews"
         element={

@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { LogOut } from "lucide-react";
 import NavItem             from "./NavItem";
 import { useSidebar }      from "./useSidebar";
 import { NAV_ITEMS }       from "./Sidebar.constants";
 import type { SidebarProps } from "./Sidebar.types";
 import { useAuth } from "../contextApi/AuthContext";
+import LogoutConfirmModal from "./modals/LogoutConfirmModal";
 
 const Sidebar = ({}: SidebarProps) => {
   const { isActive, handleNavClick } = useSidebar();
   const { user, logout } = useAuth();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   const userName = user?.name || "Job Seeker";
   const userRole = "Job Seeker";
@@ -62,8 +64,9 @@ const Sidebar = ({}: SidebarProps) => {
           </div>
 
           {/* Logout icon */}
+          <>
           <button 
-            onClick={logout}
+            onClick={() => setIsLogoutOpen(true)}
             className="p-1 rounded hover:bg-white/[0.05] transition-colors"
             title="Log out"
           >
@@ -72,6 +75,8 @@ const Sidebar = ({}: SidebarProps) => {
               className="text-slate-600 group-hover:text-slate-400 transition-colors"
             />
           </button>
+          <LogoutConfirmModal isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} onConfirm={logout} />
+          </>
         </div>
       </div>
 

@@ -20,25 +20,65 @@ const Dashboard = () => {
     reviews: 0,
     offers: 0,
   });
-  const [recentJobs, setRecentJobs] = useState<JobApplication[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
+    const token = localStorage.getItem("token");
+    console.log("🚀 [Dashboard Sub] fetchDashboardData called. Token exists:", !!token);
+
+    if (!token) {
+      console.error("❌ [Dashboard Sub] No token found in localStorage!");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    // Fetch Stats independently
+    const fetchStats = async () => {
       try {
-        const [statsRes, recentRes] = await Promise.all([
-          JobService.getStats(),
-          JobService.getRecent(),
-        ]);
-        if (statsRes.success) setStats(statsRes.data);
-        if (recentRes.success) setRecentJobs(recentRes.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
+        const res = await JobService.getStats();
+        console.log("📊 [Dashboard Sub] Stats Raw Response:", res);
+        if (res && res.success) {
+          setStats(res.data);
+          console.log("✅ [Dashboard Sub] Stats updated");
+        }
+      } catch (err) {
+        console.error("❌ [Dashboard Sub] Stats fetch error:", err);
       }
     };
 
+    // Fetch Applications independently
+    const fetchApps = async () => {
+      try {
+        const res = await JobService.getAll();
+        console.log("📋 [Dashboard Sub] Apps Raw Response:", res);
+
+        if (res && res.success) {
+          let data = res.data;
+          // If data is an object with a 'rows' property (common in Sequelize findAndCountAll)
+          if (data && !Array.isArray(data) && Array.isArray(data.rows)) {
+            data = data.rows;
+          }
+
+          const finalData = Array.isArray(data) ? data : [];
+          console.log(`✅ [Dashboard Sub] Setting ${finalData.length} applications`);
+          setApplications(finalData);
+        } else {
+          console.warn("⚠️ [Dashboard Sub] Apps fetch success was false or res null", res);
+        }
+      } catch (err) {
+        console.error("❌ [Dashboard Sub] Apps fetch error:", err);
+      }
+    };
+
+    await Promise.allSettled([fetchStats(), fetchApps()]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    console.log("📌 Dashboard Sub Component (src/pages/Dashboard/Dashboard.tsx) Mounted");
     fetchDashboardData();
   }, []);
 
@@ -167,17 +207,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Applications Section */}
+      {/* All Applications Section */}
       <div className="bg-[#0E131F]/80 backdrop-blur-md border border-[#1E293B] rounded-2xl overflow-hidden shadow-xl">
         <div className="p-6 border-b border-[#1A2333] flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Recent Applications</h2>
-          <button 
-            onClick={() => navigate("/applications")}
-            className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors group"
-          >
-            View all
-            <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
+          <h2 className="text-xl font-bold text-white">All Applications</h2>
+          <div className="text-xs font-semibold text-slate-500">
+            Showing {applications.length} applications
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -193,7 +229,7 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1A2333] text-sm text-slate-300">
-              {recentJobs.length === 0 ? (
+              {applications.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
@@ -214,7 +250,7 @@ const Dashboard = () => {
                   </td>
                 </tr>
               ) : (
-                recentJobs.map((job) => (
+                applications.map((job) => (
                   <tr key={job.id} className="hover:bg-white/[0.01] transition-colors group">
                     <td className="px-6 py-4 font-semibold text-white group-hover:text-purple-400 transition-colors">
                       {job.company}

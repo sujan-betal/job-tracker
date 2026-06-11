@@ -7,19 +7,20 @@ const customErrorHandler = (req: Request, res: Response, next: NextFunction) => 
     if (!errors.isEmpty()) {
         const formattedErrors = errors.array().map((error: any) => {
             let value;
+            const field = error.path || error.param;
 
             switch (error.location) {
                 case "body":
-                    value = req.body?.[error.param];
+                    value = req.body?.[field];
                     break;
                 case "query":
-                    value = req.query?.[error.param];
+                    value = req.query?.[field];
                     break;
                 case "params":
-                    value = req.params?.[error.param];
+                    value = req.params?.[field];
                     break;
                 case "headers":
-                    value = req.headers?.[error.param];
+                    value = req.headers?.[field];
                     break;
                 default:
                     value = undefined;
@@ -29,12 +30,13 @@ const customErrorHandler = (req: Request, res: Response, next: NextFunction) => 
                 type: "field",
                 value,
                 msg: error.msg,
-                path: error.param,
-                location: "body",
+                path: field,
+                location: error.location || "body",
             };
         });
 
         const allErrors = formattedErrors.map((e) => e.msg);
+        console.error("❌ Validation Errors:", allErrors.join(", "));
 
         return res.status(StatusCode.badRequest).json({
             data: null,

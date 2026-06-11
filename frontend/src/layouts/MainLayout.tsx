@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/Sidebar/index";
 import Navbar from "../components/Navbar";
 
 interface MainLayoutProps {

@@ -39,7 +39,7 @@ export const apiResponsePagination = (
     message: string,
     pagination: {
         page: number;
-        limit: number;
+        pageSize: number;
         totalPages: number;
         totalItems: number;
     },
@@ -52,7 +52,7 @@ export const apiResponsePagination = (
         message,
         pagination: {
             page: pagination.page,
-            limit: pagination.limit,
+            pageSize: pagination.pageSize,
             totalPages: pagination.totalPages,
             totalItems: pagination.totalItems,
         },

@@ -28,7 +28,7 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
     setLoading(true);
 
     try {
-      const response = await JobService.create({
+      const payload = {
         company,
         position,
         location,
@@ -37,7 +37,11 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
         appliedDate,
         jobUrl,
         notes,
-      });
+      };
+      console.log("Sending payload:", payload);
+      
+      const response = await JobService.create(payload);
+      console.log("Response:", response);
 
       if (response.success) {
         onSuccess();
@@ -52,11 +56,16 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
         setJobUrl("");
         setNotes("");
       } else {
-        setError(response.errMessage || "Failed to create application");
+        setError(response.errMessage || response.message || "Failed to create application");
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.errMessage || "An error occurred. Please try again.");
+      console.error("Error details:", err);
+      const errorMessage = 
+        err.response?.data?.errMessage || 
+        err.response?.data?.message || 
+        err.message || 
+        "An error occurred. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -165,13 +174,14 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Date Applied *</label>
               <div className="relative">
-                <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 <input
                   type="date"
                   required
                   value={appliedDate}
                   onChange={(e) => setAppliedDate(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#080B11] border border-[#1E293B] rounded-xl text-slate-200 text-sm outline-none transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#080B11] border border-[#1E293B] rounded-xl text-slate-200 text-sm outline-none transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
             </div>

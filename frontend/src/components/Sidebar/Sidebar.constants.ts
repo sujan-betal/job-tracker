@@ -14,8 +14,7 @@ import type { NavItem } from "./Sidebar.types";
 
 export const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard,  label: "Dashboard",    path: "/"             },
-  // Applications listed on Dashboard recent section — hide separate nav entry
-  // { icon: BriefcaseBusiness,label: "Applications", path: "/applications", badge: 0},
+  { icon: BriefcaseBusiness,label: "Applications", path: "/applications", badge: 0},
   { icon: CalendarCheck,    label: "Interviews",   path: "/interviews",   badge: 0 },
   { icon: Gift,             label: "Offers",       path: "/offers"       },
   { icon: Users,            label: "Contacts",     path: "/contacts"     },

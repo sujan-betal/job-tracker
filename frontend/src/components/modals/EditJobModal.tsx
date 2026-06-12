@@ -161,7 +161,8 @@ const EditJobModal = ({ isOpen, onClose, onSuccess, job }: EditJobModalProps) =>
                 className="w-full px-4 py-2.5 bg-[#080B11] border border-[#1E293B] rounded-xl text-slate-200 text-sm outline-none transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500 appearance-none cursor-pointer"
               >
                 <option value="applied">Applied</option>
-                <option value="interview">Interview</option>
+                <option value="in_progress">In Progress</option>
+                <option value="review">Interview</option>
                 <option value="offer">Offer</option>
                 <option value="rejected">Rejected</option>
               </select>

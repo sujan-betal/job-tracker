@@ -3,6 +3,7 @@ import { useAuth } from "../../contextApi/AuthContext";
 import { JobService, JobApplication } from "../../services/job.service";
 import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AddJobModal from "../../components/modals/AddJobModal";
 
 interface Stats {
   total_applied: number;
@@ -22,6 +23,7 @@ const Dashboard = () => {
   });
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const fetchDashboardData = async () => {
     const token = localStorage.getItem("token");
@@ -241,7 +243,7 @@ const Dashboard = () => {
                         Start tracking your job search by adding your very first job application.
                       </p>
                       <button
-                        onClick={() => navigate("/applications")}
+                        onClick={() => setIsAddOpen(true)}
                         className="mt-4 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 font-semibold text-xs rounded-xl border border-purple-500/20 transition-all active:scale-[0.98]"
                       >
                         Add Job Application
@@ -272,6 +274,7 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
+      <AddJobModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSuccess={fetchDashboardData} />
     </div>
   );
 };

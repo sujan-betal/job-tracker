@@ -2,11 +2,10 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
-// Applications page deprecated — keep file but redirect route to Dashboard
-// import Applications from "../pages/Applications";
+import Applications from "../pages/Applications/Applications";
 import Interviews from "../pages/Interviews";
 import Offers from "../pages/Offers";
 import Contacts from "../pages/Contacts";
@@ -31,7 +30,16 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/applications" element={<Navigate to="/" replace />} />
+      <Route
+        path="/applications"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Applications />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/interviews"
         element={

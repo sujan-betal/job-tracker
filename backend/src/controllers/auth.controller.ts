@@ -387,15 +387,28 @@ export const uploadDocument = async (req: Request, res: Response) => {
             resource_type: "auto", 
         });
 
+        console.log("Cloudinary Upload Result:", result);
+
         // Save to DB
+        console.log("Attempting to create Document in DB with data:", {
+            userId,
+            name: req.file.originalname,
+            type: req.body.type || "resume",
+            url: result.secure_url,
+            publicId: result.public_id,
+            format: result.format || req.file.mimetype.split("/")[1],
+        });
+
         const document = await Document.create({
             userId,
             name: req.file.originalname,
             type: req.body.type || "resume",
             url: result.secure_url,
             publicId: result.public_id,
-            format: result.format,
+            format: result.format || req.file.mimetype.split("/")[1],
         });
+
+        console.log("Document created successfully:", document.toJSON());
 
         return apiResponseSuccess(
             document,
@@ -421,7 +434,7 @@ export const getDocuments = async (req: Request, res: Response) => {
         return apiResponseSuccess(
             documents,
             true,
-            StatusCode.ok,
+            StatusCode.success,
             "Documents fetched successfully",
             res
         );

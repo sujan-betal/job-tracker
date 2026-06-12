@@ -11,6 +11,8 @@ export const registerUser = async (callApi: any, body: {
     body,
     includeAuth: false,
     showToast: false,
+
+    
   });
 };
 
@@ -27,12 +29,20 @@ export const loginUser = async (callApi: any, body: {
   });
 };
 
+export const getUserProfile = async (callApi: any) => {
+  return await callApi({
+    url: JOBTRACKER_URLS.PROFILE,
+    method: "GET",
+    includeAuth: true,
+  });
+};
+
 export const uploadDocument = async (callApi: any, formData: FormData) => {
   return await callApi({
     url: JOBTRACKER_URLS.UPLOAD_DOCUMENT,
     method: "POST",
     body: formData,
-    includeAuth: true,
+    timeout: 30000,
   });
 };
 

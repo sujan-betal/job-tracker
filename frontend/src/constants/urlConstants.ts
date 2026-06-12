@@ -18,6 +18,10 @@ const JOBTRACKER_URLS = {
 
   // Legacy/Alternative Mounts (Ensuring compatibility)
   ADD_APP_ALT: `${baseUrl}/user/add`,
+
+  // Documents
+  UPLOAD_DOCUMENT: `${baseUrl}/document/upload`,
+  GET_DOCUMENTS:   `${baseUrl}/documents`,
 };
 
 export default JOBTRACKER_URLS;

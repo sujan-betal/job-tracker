@@ -8,12 +8,16 @@ import {
     getDashboardStats, 
     getRecentApplications, 
     updateApplication, 
-    deleteApplication 
+    deleteApplication ,
+    uploadDocument,
+    getDocuments,
 } from "../controllers/auth.controller.js";
 import { registerValidation, loginValidation } from "../validations/auth.validation.js";
 import customErrorHandler from "../utils/customErrorHandler.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { createApplicationValidation, updateApplicationValidation } from "../validations/auth.validation.js";
+import { upload } from "../middlewares/upload.middleware.js";
+
 
 
 const router = express.Router();
@@ -33,5 +37,18 @@ router.delete("/applications/:id", authenticate, deleteApplication);
 
 // Legacy support for the specific frontend constant ADD_APP_ALT
 router.post("/user/add", authenticate, createApplicationValidation, customErrorHandler, addApplication);
+
+router.post(
+    "/document/upload",
+    authenticate,           
+    upload.single("file"),  
+    uploadDocument          
+);
+
+router.get(
+    "/documents",
+    authenticate,
+    getDocuments
+);
 
 export default router;

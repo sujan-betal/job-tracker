@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Calendar, MapPin, DollarSign, Link, FileText, Briefcase } from "lucide-react";
+import { X, Calendar, MapPin, IndianRupee, Link, FileText, Briefcase } from "lucide-react";
 import { JobService, JobApplication } from "../services/job.service";
 
 interface AddJobModalProps {
@@ -133,12 +133,12 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Salary Range</label>
               <div className="relative">
-                <DollarSign size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <IndianRupee size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
                   value={salary}
                   onChange={(e) => setSalary(e.target.value)}
-                  placeholder="e.g. $120k - $150k"
+                  placeholder="e.g. ₹120k - ₹150k"
                   className="w-full pl-10 pr-4 py-2.5 bg-[#080B11] border border-[#1E293B] rounded-xl text-slate-200 placeholder-slate-600 text-sm outline-none transition-all focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 />
               </div>

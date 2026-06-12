@@ -26,3 +26,20 @@ export const loginUser = async (callApi: any, body: {
     showToast: false,
   });
 };
+
+export const uploadDocument = async (callApi: any, formData: FormData) => {
+  return await callApi({
+    url: JOBTRACKER_URLS.UPLOAD_DOCUMENT,
+    method: "POST",
+    body: formData,
+    includeAuth: true,
+  });
+};
+
+export const fetchDocuments = async (callApi: any) => {
+  return await callApi({
+    url: JOBTRACKER_URLS.GET_DOCUMENTS,
+    method: "GET",
+    includeAuth: true,
+  });
+};

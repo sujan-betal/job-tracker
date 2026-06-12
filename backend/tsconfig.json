@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "typeRoots": ["./src/types", "./node_modules/@types"]  // ← ye add karo
+    "typeRoots": ["./src/types", "./node_modules/@types"]  
   },
   "include": ["src/**/*"]
 }

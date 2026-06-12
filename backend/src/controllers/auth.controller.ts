@@ -6,6 +6,9 @@ import Application from "../models/application.model.js";
 import { StatusCode } from "../utils/statusCodes.js";
 import { apiResponseSuccess, apiResponseErr } from "../utils/apiResponse.js";
 import * as applicationService from "../services/application.service.js";
+import cloudinary from "../config/cloudinary.js";
+import { v2 as cloudinaryV2 } from "cloudinary";
+import Document from "../models/document.model.js";
 
 export const register = async (
     req: Request,
@@ -363,6 +366,68 @@ export const deleteApplication = async (req: Request, res: Response) => {
             error.message || "Failed to delete application",
             res
         );
+    }
+};
+
+
+
+export const uploadDocument = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+
+        if (!req.file) {
+            return apiResponseErr(null, false, StatusCode.badRequest, "No file uploaded", res);
+        }
+
+        // Convert buffer to base64
+        const fileBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+        const result = await cloudinary.uploader.upload(fileBase64, {
+            folder:        `job-tracker/user_${userId}`,
+            resource_type: "auto", 
+        });
+
+        // Save to DB
+        const document = await Document.create({
+            userId,
+            name: req.file.originalname,
+            type: req.body.type || "resume",
+            url: result.secure_url,
+            publicId: result.public_id,
+            format: result.format,
+        });
+
+        return apiResponseSuccess(
+            document,
+            true,
+            StatusCode.created,
+            "Document uploaded successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("Error in uploadDocument:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, "Upload failed", res);
+    }
+};
+
+export const getDocuments = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const documents = await Document.findAll({
+            where: { userId },
+            order: [["createdAt", "DESC"]],
+        });
+
+        return apiResponseSuccess(
+            documents,
+            true,
+            StatusCode.ok,
+            "Documents fetched successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("Error in getDocuments:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to fetch documents", res);
     }
 };
 

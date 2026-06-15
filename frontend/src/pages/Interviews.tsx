@@ -1,33 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { JobService, JobApplication } from "../services/job.service";
-import { Calendar, Briefcase, MapPin, ExternalLink, ArrowUpRight } from "lucide-react";
+import { Calendar, Briefcase, MapPin, ExternalLink, ArrowUpRight, IndianRupee, Gift, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useJobs } from "../contextApi/JobContext";
 
 const Interviews = () => {
   const [interviews, setInterviews] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const { refreshStats } = useJobs();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchInterviews = async () => {
-      try {
-        const response = await JobService.getAll();
-        if (response.success) {
-          // Filter jobs with status 'review' (interview) or 'in_progress'
-          const filtered = response.data.filter(
-            (job: JobApplication) => job.status === "review" || job.status === "in_progress"
-          );
-          setInterviews(filtered);
-        }
-      } catch (error) {
-        console.error("Error fetching interviews:", error);
-      } finally {
-        setLoading(false);
+  const fetchInterviews = async () => {
+    try {
+      const response = await JobService.getAll();
+      if (response.success) {
+        // Filter jobs with status 'review' (interview) or 'in_progress'
+        const filtered = response.data.filter(
+          (job: JobApplication) => job.status === "review" || job.status === "in_progress"
+        );
+        setInterviews(filtered);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching interviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchInterviews();
   }, []);
+
+  const handleMoveToOffer = async (job: JobApplication) => {
+    setUpdatingId(job.id!);
+    try {
+      const response = await JobService.update(job.id!, { status: "offer" });
+      if (response.success) {
+        refreshStats();
+        fetchInterviews();
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -85,7 +103,7 @@ const Interviews = () => {
           {interviews.map((job) => (
             <div
               key={job.id}
-              className="bg-[#0E131F]/90 border border-[#1E293B] rounded-2xl p-6 shadow-xl relative overflow-hidden transition-all duration-300 hover:border-purple-500/30 hover:translate-y-[-2px] group"
+              className="bg-[#0E131F] border border-[#1E293B] rounded-2xl p-6 shadow-xl relative overflow-hidden transition-all duration-300 hover:border-purple-500/30 hover:translate-y-[-2px] group"
             >
               <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-purple-500 to-indigo-500"></div>
 
@@ -110,6 +128,10 @@ const Interviews = () => {
                   <span>Location: {job.location || "—"}</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <IndianRupee size={13} className="text-slate-500" />
+                  <span>Salary: {job.salary || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
                   <Calendar size={13} className="text-slate-500" />
                   <span>Applied Date: {job.appliedDate}</span>
                 </div>
@@ -124,14 +146,30 @@ const Interviews = () => {
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between border-t border-[#1A2333] pt-4">
+              <div className="flex items-center justify-between border-t border-[#1A2333] pt-4 gap-3">
                 <button
                   onClick={() => navigate("/applications")}
                   className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-all"
                 >
-                  Manage Details
+                  Details
                   <ArrowUpRight size={13} />
                 </button>
+
+                <button
+                  onClick={() => handleMoveToOffer(job)}
+                  disabled={updatingId === job.id}
+                  className="flex-1 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-green-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  {updatingId === job.id ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Gift size={12} />
+                      Got Offer
+                    </>
+                  )}
+                </button>
+
                 {job.jobUrl && (
                   <a
                     href={job.jobUrl}

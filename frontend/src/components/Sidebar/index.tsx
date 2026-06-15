@@ -5,11 +5,13 @@ import { useSidebar }      from "./useSidebar";
 import { NAV_ITEMS }       from "./Sidebar.constants";
 import type { SidebarProps } from "./Sidebar.types";
 import { useAuth } from "../../contextApi/AuthContext";
+import { useJobs } from "../../contextApi/JobContext";
 import LogoutConfirmModal from "../modals/LogoutConfirmModal";
 
 const Sidebar = ({}: SidebarProps) => {
   const { isActive, handleNavClick } = useSidebar();
   const { user, logout } = useAuth();
+  const { stats } = useJobs();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   const userName = user?.name || "Job Seeker";
@@ -17,6 +19,20 @@ const Sidebar = ({}: SidebarProps) => {
   const userInitials = user?.name 
     ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() 
     : "JS";
+
+  // Map stats to dynamic navigation items
+  const dynamicNavItems = NAV_ITEMS.map(item => {
+    if (item.path === "/applications") {
+      return { ...item, badge: stats.total_applied };
+    }
+    if (item.path === "/interviews") {
+      return { ...item, badge: stats.reviews };
+    }
+    if (item.path === "/offers") {
+      return { ...item, badge: stats.offers };
+    }
+    return item;
+  });
 
   return (
     <aside className="w-[230px] min-h-screen bg-[#0D1117] border-r border-[#1E2738] flex flex-col py-6 flex-shrink-0 sticky top-0">
@@ -35,7 +51,7 @@ const Sidebar = ({}: SidebarProps) => {
           Main Menu
         </p>
 
-        {NAV_ITEMS.map((item) => (
+        {dynamicNavItems.map((item) => (
           <NavItem
             key={item.path}
             item={item}
@@ -51,8 +67,12 @@ const Sidebar = ({}: SidebarProps) => {
 
         <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#131B27] border border-[#1E2738] group relative">
           {/* Avatar */}
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
-            {userInitials}
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 overflow-hidden">
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+            ) : (
+              userInitials
+            )}
           </div>
 
           {/* Info */}

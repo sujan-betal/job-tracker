@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { JobService } from "../../services/job.service";
+import { useJobs } from "../../contextApi/JobContext";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface DeleteConfirmModalProps {
 }
 
 const DeleteConfirmModal = ({ isOpen, onClose, onSuccess, jobId, companyName }: DeleteConfirmModalProps) => {
+  const { refreshStats } = useJobs();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +25,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onSuccess, jobId, companyName }: 
     try {
       const response = await JobService.delete(jobId);
       if (response.success) {
+        refreshStats();
         onSuccess();
         onClose();
       } else {

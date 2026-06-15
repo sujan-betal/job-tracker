@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contextApi/AuthContext";
 import { JobService, JobApplication } from "../../services/job.service";
-import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, PlusCircle } from "lucide-react";
+import { Briefcase, Clock, Award, CheckCircle, ArrowUpRight, PlusCircle, IndianRupee, Edit2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddJobModal from "../../components/modals/AddJobModal";
+import EditJobModal from "../../components/modals/EditJobModal";
+import DeleteConfirmModal from "../../components/modals/DeleteConfirmModal";
 
 interface Stats {
   total_applied: number;
@@ -24,6 +26,9 @@ const Dashboard = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null);
 
   const fetchDashboardData = async () => {
     const token = localStorage.getItem("token");
@@ -83,6 +88,16 @@ const Dashboard = () => {
     console.log("📌 Dashboard Sub Component (src/pages/Dashboard/Dashboard.tsx) Mounted");
     fetchDashboardData();
   }, []);
+
+  const handleEditClick = (job: JobApplication) => {
+    setSelectedJob(job);
+    setIsEditOpen(true);
+  };
+
+  const handleDeleteClick = (job: JobApplication) => {
+    setSelectedJob(job);
+    setIsDeleteOpen(true);
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -228,12 +243,13 @@ const Dashboard = () => {
                 <th className="px-6 py-4 text-left">Salary</th>
                 <th className="px-6 py-4 text-left">Status</th>
                 <th className="px-6 py-4 text-left">Applied Date</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1A2333] text-sm text-slate-300">
               {applications.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center">
+                  <td colSpan={7} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <div className="w-12 h-12 rounded-full bg-slate-800/40 flex items-center justify-center text-slate-500 mb-3">
                         <Briefcase size={22} />
@@ -259,7 +275,12 @@ const Dashboard = () => {
                     </td>
                     <td className="px-6 py-4">{job.position}</td>
                     <td className="px-6 py-4 text-slate-400">{job.location || "—"}</td>
-                    <td className="px-6 py-4 font-mono text-slate-400">{job.salary || "—"}</td>
+                    <td className="px-6 py-4 font-mono text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <IndianRupee size={13} className="text-slate-600" />
+                        {job.salary || "—"}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusBadgeClass(job.status)}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(job.status)}`} />
@@ -267,6 +288,24 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-400">{job.appliedDate}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <button
+                          onClick={() => handleEditClick(job)}
+                          className="p-1.5 text-slate-500 hover:text-purple-400 rounded-lg hover:bg-white/[0.03] transition-all"
+                          title="Edit"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(job)}
+                          className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-white/[0.03] transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -275,6 +314,27 @@ const Dashboard = () => {
         </div>
       </div>
       <AddJobModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSuccess={fetchDashboardData} />
+      
+      <EditJobModal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedJob(null);
+        }}
+        onSuccess={fetchDashboardData}
+        job={selectedJob}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setSelectedJob(null);
+        }}
+        onSuccess={fetchDashboardData}
+        jobId={selectedJob?.id || null}
+        companyName={selectedJob?.company || ""}
+      />
     </div>
   );
 };

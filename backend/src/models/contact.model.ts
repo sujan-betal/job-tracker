@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-const User = sequelize.define(
-    "User",
+const Contact = sequelize.define(
+    "Contact",
     {
         id: {
             type: DataTypes.INTEGER,
@@ -10,29 +10,43 @@ const User = sequelize.define(
             autoIncrement: true,
             field: "id",
         },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            field: "user_id",
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
             field: "name",
         },
+        role: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: "role",
+        },
+        company: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: "company",
+        },
         email: {
             type: DataTypes.STRING,
-            allowNull: false,
-            // unique: true,
+            allowNull: true,
             validate: {
                 isEmail: true,
             },
             field: "email",
         },
-        password: {
+        phone: {
             type: DataTypes.STRING,
-            allowNull: false,
-            field: "password",
-        },
-        profileImage: {
-            type: DataTypes.TEXT,
             allowNull: true,
-            field: "profile_image",
+            field: "phone",
+        },
+        linkedIn: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: "linkedin",
         },
     },
     {
@@ -40,8 +54,8 @@ const User = sequelize.define(
         createdAt: "createdAt",
         updatedAt: "updatedAt",
         freezeTableName: true,
-        tableName: "users",
+        tableName: "contacts",
     }
 );
 
-export default User;
+export default Contact;

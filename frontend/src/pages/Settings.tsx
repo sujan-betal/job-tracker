@@ -1,14 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "../contextApi/AuthContext";
-import { User, Mail, Shield, LogOut, Key } from "lucide-react";
+import { User as UserIcon, Mail, Shield, LogOut, Key, Camera, Loader2, Check } from "lucide-react";
 import LogoutConfirmModal from "../components/modals/LogoutConfirmModal";
+import useApiCall from "../hooks/useApiCall";
+import { uploadProfileImageService } from "../services/apiServices";
 
 const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+  const { callApi } = useApiCall();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Image size exceeds 2MB", "error");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await uploadProfileImageService(callApi, formData);
+    if (response?.success) {
+      const updatedUser = { ...user!, profileImage: response.data.profileImage };
+      updateUser(updatedUser);
+      showToast("Profile image updated!");
+    } else {
+      showToast(response?.errMessage || "Upload failed", "error");
+    }
+    setUploading(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#080B10] text-slate-200 p-8 px-6 md:px-12 font-sans relative overflow-hidden">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-2xl animate-slideIn ${
+          toast.type === "success" 
+            ? "bg-green-500/10 border-green-500/20 text-green-400" 
+            : "bg-red-500/10 border-red-500/20 text-red-400"
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${toast.type === "success" ? "bg-green-400" : "bg-red-400"} animate-pulse`} />
+          <p className="text-sm font-bold tracking-wide">{toast.message}</p>
+        </div>
+      )}
+
       {/* Glow */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none"></div>
 
@@ -28,9 +75,33 @@ const Settings = () => {
           <h3 className="text-lg font-bold text-white mb-6">Profile Settings</h3>
 
           <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-[#1A2333] mb-6">
-            {/* Avatar */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-purple-500/20 flex-shrink-0">
-              {user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}
+            {/* Avatar with Upload */}
+            <div className="relative group">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-purple-500/20 flex-shrink-0 overflow-hidden">
+                {user?.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name ? user.name.slice(0, 2).toUpperCase() : "US"
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"
+              >
+                {uploading ? (
+                  <Loader2 size={20} className="text-white animate-spin" />
+                ) : (
+                  <Camera size={20} className="text-white" />
+                )}
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                className="hidden"
+                accept="image/*"
+              />
             </div>
             
             <div className="flex-1 text-center sm:text-left space-y-1">
@@ -46,7 +117,7 @@ const Settings = () => {
             {/* Name field */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-[#1A2333]/50">
               <span className="text-slate-400 font-medium flex items-center gap-2">
-                <User size={15} className="text-slate-500" />
+                <UserIcon size={15} className="text-slate-500" />
                 Full Name
               </span>
               <span className="text-slate-200 mt-1 sm:mt-0 font-semibold">{user?.name}</span>
@@ -67,7 +138,10 @@ const Settings = () => {
                 <Shield size={15} className="text-slate-500" />
                 Account Status
               </span>
-              <span className="text-green-400 mt-1 sm:mt-0 font-semibold">Active & Synced</span>
+              <span className="text-green-400 mt-1 sm:mt-0 font-semibold flex items-center gap-1.5">
+                <Check size={14} />
+                Active & Synced
+              </span>
             </div>
           </div>
         </div>
@@ -88,7 +162,6 @@ const Settings = () => {
             </div>
 
             {/* Logout button */}
-            <>
             <button
               onClick={() => setIsLogoutOpen(true)}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98]"
@@ -96,11 +169,10 @@ const Settings = () => {
               <LogOut size={16} />
               Sign Out of Tracker
             </button>
-            <LogoutConfirmModal isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} onConfirm={logout} />
-            </>
           </div>
         </div>
       </div>
+      <LogoutConfirmModal isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} onConfirm={logout} />
     </div>
   );
 };

@@ -1,30 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { JobService, JobApplication } from "../services/job.service";
-import { Award, DollarSign, MapPin, Calendar, Check, ExternalLink } from "lucide-react";
+import { Award, IndianRupee, MapPin, Calendar, Check, ExternalLink, Briefcase, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useJobs } from "../contextApi/JobContext";
 
 const Offers = () => {
   const [offers, setOffers] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const { refreshStats } = useJobs();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        const response = await JobService.getAll();
-        if (response.success) {
-          const filtered = response.data.filter((job: JobApplication) => job.status === "offer");
-          setOffers(filtered);
-        }
-      } catch (error) {
-        console.error("Error fetching offers:", error);
-      } finally {
-        setLoading(false);
+  const fetchOffers = async () => {
+    try {
+      const response = await JobService.getAll();
+      if (response.success) {
+        const filtered = response.data.filter((job: JobApplication) => job.status === "offer");
+        setOffers(filtered);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOffers();
   }, []);
+
+  const handleStatusChange = async (job: JobApplication, newStatus: string) => {
+    setUpdatingId(job.id!);
+    try {
+      const response = await JobService.update(job.id!, { status: newStatus as any });
+      if (response.success) {
+        refreshStats();
+        fetchOffers();
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -102,7 +120,7 @@ const Offers = () => {
               {/* Salary & Details */}
               <div className="space-y-2.5 text-xs text-slate-400 border-t border-[#1A2333] pt-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign size={14} className="text-green-400 font-bold" />
+                  <IndianRupee size={14} className="text-green-400 font-bold" />
                   <span className="text-white font-semibold">Salary/Package: {job.salary || "—"}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -124,23 +142,42 @@ const Offers = () => {
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between border-t border-[#1A2333] pt-4">
-                <button
-                  onClick={() => navigate("/applications")}
-                  className="text-xs font-semibold text-green-400 hover:text-green-300 flex items-center gap-1 transition-all"
-                >
-                  Manage Details
-                </button>
-                {job.jobUrl && (
-                  <a
-                    href={job.jobUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-white/[0.03] transition-all"
+              <div className="flex items-center justify-between border-t border-[#1A2333] pt-4 gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleStatusChange(job, "rejected")}
+                    disabled={updatingId === job.id}
+                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase rounded-lg border border-red-500/20 transition-all"
                   >
-                    <ExternalLink size={14} />
-                  </a>
-                )}
+                    Declined
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(job, "applied")}
+                    disabled={updatingId === job.id}
+                    className="px-3 py-1.5 bg-slate-500/10 hover:bg-slate-500/20 text-slate-400 text-[10px] font-bold uppercase rounded-lg border border-slate-500/20 transition-all"
+                  >
+                    Revert
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {job.jobUrl && (
+                    <a
+                      href={job.jobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-white/[0.03] transition-all"
+                    >
+                      <ExternalLink size={14} />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => navigate("/applications")}
+                    className="text-xs font-semibold text-green-400 hover:text-green-300 flex items-center gap-1 transition-all"
+                  >
+                    Details
+                  </button>
+                </div>
               </div>
             </div>
           ))}

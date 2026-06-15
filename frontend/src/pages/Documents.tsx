@@ -16,13 +16,23 @@ const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const getDocs = async () => {
     setLoading(true);
     const response = await fetchDocuments(callApi);
     if (response?.success) {
       setDocuments(response.data);
+      if (response.data.length > 0) {
+        // Optional: show a small feedback that docs were fetched
+        console.log("Documents fetched successfully");
+      }
     }
     setLoading(false);
   };
@@ -35,21 +45,47 @@ const Documents = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file size (5MB limit like backend)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("File size exceeds 5MB limit", "error");
+      return;
+    }
+
     setUploading(true);
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("type", "resume"); // Default type
+    formData.append("file", file);
 
-    const response = await uploadDocument(callApi, formData);
-    if (response?.success) {
-      getDocs(); // Refresh list
+    try {
+      const response = await uploadDocument(callApi, formData);
+      if (response?.success) {
+        showToast("Document uploaded successfully!");
+        getDocs(); // Refresh list
+      } else {
+        showToast(response?.errMessage || response?.message || "Upload failed", "error");
+      }
+    } catch (err) {
+      showToast("An error occurred during upload", "error");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
     <div className="min-h-screen bg-[#080B10] text-slate-200 p-8 px-6 md:px-12 font-sans relative overflow-hidden">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-2xl animate-slideIn ${
+          toast.type === "success" 
+            ? "bg-green-500/10 border-green-500/20 text-green-400" 
+            : "bg-red-500/10 border-red-500/20 text-red-400"
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${toast.type === "success" ? "bg-green-400" : "bg-red-400"} animate-pulse`} />
+          <p className="text-sm font-bold tracking-wide">{toast.message}</p>
+        </div>
+      )}
+
       <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto relative">

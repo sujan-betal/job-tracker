@@ -11,6 +11,10 @@ import {
     deleteApplication ,
     uploadDocument,
     getDocuments,
+    uploadProfileImage,
+    getContacts,
+    addContact,
+    deleteContact,
 } from "../controllers/auth.controller.js";
 import { registerValidation, loginValidation } from "../validations/auth.validation.js";
 import customErrorHandler from "../utils/customErrorHandler.js";
@@ -26,6 +30,7 @@ const router = express.Router();
 router.post("/user/register", registerValidation, customErrorHandler, register);
 router.post("/user/login", loginValidation, customErrorHandler, login);
 router.get("/user/profile", authenticate, getProfile);
+router.post("/user/profile-image", authenticate, upload.single("image"), uploadProfileImage);
 
 // Application Routes (Full path: /api/applications/...)
 router.get("/applications", authenticate, getAllApplications);
@@ -50,5 +55,10 @@ router.get(
     authenticate,
     getDocuments
 );
+
+// Contact Routes
+router.get("/contacts", authenticate, getContacts);
+router.post("/contacts", authenticate, addContact);
+router.delete("/contacts/:id", authenticate, deleteContact);
 
 export default router;

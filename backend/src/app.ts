@@ -16,6 +16,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Request logger to debug 404 issues
+app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log(`📡 [Incoming Request]: ${req.method} ${req.url}`);
+    next();
+});
+
 // Routes
 app.use("/api", authRoutes);
 

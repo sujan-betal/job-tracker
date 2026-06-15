@@ -9,6 +9,7 @@ import * as applicationService from "../services/application.service.js";
 import cloudinary from "../config/cloudinary.js";
 import { v2 as cloudinaryV2 } from "cloudinary";
 import Document from "../models/document.model.js";
+import Contact from "../models/contact.model.js";
 
 export const register = async (
     req: Request,
@@ -118,6 +119,7 @@ export const login = async (req: Request, res: Response) => {
                     id: user.id,
                     name: user.name,
                     email: user.email,
+                    profileImage: user.profileImage,
                 },
             },
             true,
@@ -169,6 +171,69 @@ export const getProfile = async (req: Request, res: Response) => {
             error.message || "Something went wrong while fetching profile",
             res
         );
+    }
+};
+
+export const uploadProfileImage = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        console.log(`🚀 [uploadProfileImage] Starting for User ${userId}`);
+
+        if (!req.file) {
+            console.error("❌ [uploadProfileImage] No file received");
+            return apiResponseErr(null, false, StatusCode.badRequest, "No image uploaded", res);
+        }
+
+        const cloud_name = process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME;
+        const api_key    = process.env.CLOUDINARY_KEY  || process.env.CLOUDINARY_API_KEY   || process.env.API_KEY;
+        const api_secret = process.env.CLOUDINARY_SECRET || process.env.CLOUDINARY_API_SECRET || process.env.API_SECRET;
+
+        if (!cloud_name || !api_key || !api_secret) {
+            return apiResponseErr(null, false, StatusCode.internalServerError, "Cloudinary configuration missing on server", res);
+        }
+
+        const uploadFromBuffer = (fileBuffer: Buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: `job-tracker/profiles`,
+                        resource_type: "image",
+                    },
+                    (error, result) => {
+                        if (result) {
+                            console.log("✅ [Cloudinary] Image upload success");
+                            resolve(result);
+                        } else {
+                            console.error("❌ [Cloudinary] Image upload failed:", error);
+                            reject(error);
+                        }
+                    }
+                );
+                stream.end(fileBuffer);
+            });
+        };
+
+        const result: any = await uploadFromBuffer(req.file.buffer);
+        
+        const user = await User.findByPk(userId);
+        if (!user) {
+            console.error(`❌ [uploadProfileImage] User ${userId} not found in DB`);
+            return apiResponseErr(null, false, StatusCode.notFound, "User not found", res);
+        }
+
+        console.log("💾 [uploadProfileImage] Updating User record with URL:", result.secure_url);
+        await user.update({ profileImage: result.secure_url });
+
+        return apiResponseSuccess(
+            { profileImage: result.secure_url },
+            true,
+            StatusCode.success,
+            "Profile image updated successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("❌ [uploadProfileImage] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, `Upload failed: ${error.message}`, res);
     }
 };
 
@@ -248,11 +313,6 @@ export const getAllApplications = async (req: Request, res: Response) => {
             order: [["createdAt", "DESC"]],
         });
 
-        console.log(`📡 [Backend] Total apps for user ${userId}: ${total}`);
-        if (apps.length > 0) {
-            console.log(`📡 [Backend] First app found:`, apps[0].toJSON());
-        }
-
         return apiResponseSuccess(
             apps,
             true,
@@ -277,6 +337,7 @@ export const getAllApplications = async (req: Request, res: Response) => {
         );
     }
 };
+
 export const getRecentApplications = async (req: Request, res: Response) => {
     try {
         const userId = req.user.id;
@@ -369,46 +430,62 @@ export const deleteApplication = async (req: Request, res: Response) => {
     }
 };
 
-
-
 export const uploadDocument = async (req: Request, res: Response) => {
     try {
         const userId = req.user.id;
+        console.log(`🚀 [uploadDocument] Starting for User ${userId}`);
 
         if (!req.file) {
+            console.error("❌ [uploadDocument] No file received");
             return apiResponseErr(null, false, StatusCode.badRequest, "No file uploaded", res);
         }
 
-        // Convert buffer to base64
-        const fileBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+        const cloud_name = process.env.CLOUDINARY_NAME || process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME;
+        const api_key    = process.env.CLOUDINARY_KEY  || process.env.CLOUDINARY_API_KEY   || process.env.API_KEY;
+        const api_secret = process.env.CLOUDINARY_SECRET || process.env.CLOUDINARY_API_SECRET || process.env.API_SECRET;
 
-        const result = await cloudinary.uploader.upload(fileBase64, {
-            folder:        `job-tracker/user_${userId}`,
-            resource_type: "auto", 
-        });
+        if (!cloud_name || !api_key || !api_secret) {
+            const missing = [];
+            if (!cloud_name) missing.push("CLOUD_NAME");
+            if (!api_key)    missing.push("API_KEY");
+            if (!api_secret) missing.push("API_SECRET");
+            
+            console.error(`❌ [uploadDocument] Missing Cloudinary Config: ${missing.join(", ")}`);
+            return apiResponseErr(null, false, StatusCode.internalServerError, `Cloudinary configuration missing: ${missing.join(", ")}`, res);
+        }
 
-        console.log("Cloudinary Upload Result:", result);
+        const uploadFromBuffer = (fileBuffer: Buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: `job-tracker/documents`,
+                        resource_type: "auto",
+                    },
+                    (error, result) => {
+                        if (result) {
+                            console.log("✅ [Cloudinary] Document upload success");
+                            resolve(result);
+                        } else {
+                            console.error("❌ [Cloudinary] Document upload failed:", error);
+                            reject(error);
+                        }
+                    }
+                );
+                stream.end(fileBuffer);
+            });
+        };
 
-        // Save to DB
-        console.log("Attempting to create Document in DB with data:", {
-            userId,
-            name: req.file.originalname,
-            type: req.body.type || "resume",
-            url: result.secure_url,
-            publicId: result.public_id,
-            format: result.format || req.file.mimetype.split("/")[1],
-        });
+        const result: any = await uploadFromBuffer(req.file.buffer);
 
+        console.log("💾 [uploadDocument] Saving to DB...");
         const document = await Document.create({
             userId,
             name: req.file.originalname,
             type: req.body.type || "resume",
             url: result.secure_url,
             publicId: result.public_id,
-            format: result.format || req.file.mimetype.split("/")[1],
+            format: result.format || (req.file.originalname.split(".").pop()) || "unknown",
         });
-
-        console.log("Document created successfully:", document.toJSON());
 
         return apiResponseSuccess(
             document,
@@ -418,8 +495,8 @@ export const uploadDocument = async (req: Request, res: Response) => {
             res
         );
     } catch (error: any) {
-        console.error("Error in uploadDocument:", error);
-        return apiResponseErr(null, false, StatusCode.internalServerError, "Upload failed", res);
+        console.error("❌ [uploadDocument] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, `Upload failed: ${error.message}`, res);
     }
 };
 
@@ -439,8 +516,82 @@ export const getDocuments = async (req: Request, res: Response) => {
             res
         );
     } catch (error: any) {
-        console.error("Error in getDocuments:", error);
         return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to fetch documents", res);
     }
 };
 
+export const getContacts = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const contacts = await Contact.findAll({
+            where: { userId },
+            order: [["createdAt", "DESC"]],
+        });
+
+        return apiResponseSuccess(
+            contacts,
+            true,
+            StatusCode.success,
+            "Contacts fetched successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("❌ [getContacts] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to fetch contacts", res);
+    }
+};
+
+export const addContact = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user.id;
+        console.log(`🚀 [addContact] Starting for User ${userId}`);
+        const { name, role, company, email, phone, linkedIn } = req.body;
+
+        if (!name) {
+            console.error("❌ [addContact] Missing name");
+            return apiResponseErr(null, false, StatusCode.badRequest, "Name is required", res);
+        }
+
+        console.log("💾 [addContact] Creating Contact record in DB...");
+        const contact = await Contact.create({
+            userId,
+            name,
+            role,
+            company,
+            email,
+            phone,
+            linkedIn,
+        });
+        console.log("✨ [addContact] Contact created successfully:", (contact as any).id);
+
+        return apiResponseSuccess(
+            contact,
+            true,
+            StatusCode.created,
+            "Contact added successfully",
+            res
+        );
+    } catch (error: any) {
+        console.error("❌ [addContact] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, `Failed to add contact: ${error.message || "Database error"}`, res);
+    }
+};
+
+export const deleteContact = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const contact = await Contact.findOne({ where: { id, userId } });
+        if (!contact) {
+            return apiResponseErr(null, false, StatusCode.notFound, "Contact not found", res);
+        }
+
+        await contact.destroy();
+
+        return apiResponseSuccess(null, true, StatusCode.success, "Contact deleted successfully", res);
+    } catch (error: any) {
+        console.error("❌ [deleteContact] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to delete contact", res);
+    }
+};

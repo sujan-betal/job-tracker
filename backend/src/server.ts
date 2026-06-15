@@ -10,11 +10,10 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("✅ MySQL connected successfully");
-    console.log("✅ Database connected");
 
-    await sequelize.sync({ force: false });
-    console.log("🔄 Models synced");
-    console.log("✅ Models synced");
+    // Force sync during model changes to ensure 'contacts' table is created
+    await sequelize.sync({ alter: true });
+    console.log("🔄 Models synced successfully");
 
     const server = app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Calendar, MapPin, IndianRupee, Link, FileText, Briefcase } from "lucide-react";
 import { JobService, JobApplication } from "../../services/job.service";
+import { useJobs } from "../../contextApi/JobContext";
 
 interface AddJobModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AddJobModalProps {
 }
 
 const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
+  const { refreshStats } = useJobs();
   const [company, setCompany] = useState("");
   const [position, setPosition] = useState("");
   const [location, setLocation] = useState("");
@@ -44,6 +46,7 @@ const AddJobModal = ({ isOpen, onClose, onSuccess }: AddJobModalProps) => {
       console.log("Response:", response);
 
       if (response.success) {
+        refreshStats();
         onSuccess();
         onClose();
         // Reset form

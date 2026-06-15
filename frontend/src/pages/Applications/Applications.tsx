@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { JobService, JobApplication } from "../../services/job.service";
-import { Search, Plus, Edit2, Trash2, ExternalLink, Calendar, MapPin, DollarSign, Briefcase } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ExternalLink, Calendar, MapPin, IndianRupee, Briefcase } from "lucide-react";
 import AddJobModal from "../../components/modals/AddJobModal";
 import EditJobModal from "../../components/modals/EditJobModal";
 import DeleteConfirmModal from "../../components/modals/DeleteConfirmModal";
@@ -222,7 +222,7 @@ const Applications = () => {
                     </td>
                     <td className="px-6 py-4 font-mono text-slate-400">
                       <span className="flex items-center gap-1">
-                        <DollarSign size={13} className="text-slate-600" />
+                        <IndianRupee size={13} className="text-slate-600" />
                         {job.salary || "—"}
                       </span>
                     </td>

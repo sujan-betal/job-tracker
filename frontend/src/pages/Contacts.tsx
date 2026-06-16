@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Phone, Mail, Building, Plus, MoreVertical, ExternalLink, UserPlus, Trash2, Loader2 } from "lucide-react";
+import { Users, Search, Phone, Mail, Building, Plus, MoreVertical, ExternalLink, UserPlus, Trash2, Loader2, Edit2 } from "lucide-react";
 import useApiCall from "../hooks/useApiCall";
 import { fetchContactsService, deleteContactService } from "../services/apiServices";
 import AddContactModal from "../components/modals/AddContactModal";
+import EditContactModal from "../components/modals/EditContactModal";
 
 interface Contact {
   id: number;
@@ -20,6 +21,8 @@ const Contacts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const getContacts = async () => {
@@ -39,6 +42,11 @@ const Contacts = () => {
   useEffect(() => {
     getContacts();
   }, []);
+
+  const handleEdit = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsEditOpen(true);
+  };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this contact?")) return;
@@ -118,9 +126,17 @@ const Contacts = () => {
                   </div>
                   <div className="flex gap-1">
                     <button 
+                      onClick={() => handleEdit(contact)}
+                      className="p-2 text-slate-600 hover:text-purple-400 hover:bg-purple-400/5 rounded-lg transition-colors"
+                      title="Edit Contact"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button 
                       onClick={() => handleDelete(contact.id)}
                       disabled={deletingId === contact.id}
                       className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-colors"
+                      title="Delete Contact"
                     >
                       {deletingId === contact.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} />}
                     </button>
@@ -184,6 +200,16 @@ const Contacts = () => {
         isOpen={isAddOpen} 
         onClose={() => setIsAddOpen(false)} 
         onSuccess={getContacts} 
+      />
+
+      <EditContactModal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedContact(null);
+        }}
+        onSuccess={getContacts}
+        contact={selectedContact}
       />
     </div>
   );

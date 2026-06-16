@@ -27,15 +27,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
+      let storedToken = localStorage.getItem("token");
+      let storedUser = localStorage.getItem("user");
+
+      // Handle cases where token might be "undefined" or "null" as strings
+      if (storedToken === "undefined" || storedToken === "null") {
+        localStorage.removeItem("token");
+        storedToken = null;
+      }
 
       if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        
-        // Proactively fetch latest profile to verify token validity
         try {
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+          
+          // Proactively fetch latest profile to verify token validity
           const params = getCallParams("GET", null, true, storedToken);
           const response = await makeCall(JOBTRACKER_URLS.PROFILE, params, false);
           
@@ -44,13 +51,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(freshUser);
             localStorage.setItem("user", JSON.stringify(freshUser));
           } else {
-            console.warn("Session invalid, logging out");
+            console.warn("Session invalid or expired, logging out");
             logout();
           }
         } catch (error) {
-          console.error("Token verification failed, logging out", error);
+          console.error("Auth initialization failed", error);
           logout();
         }
+      } else {
+        // Ensure state is clean if no token
+        setToken(null);
+        setUser(null);
       }
       setLoading(false);
     };

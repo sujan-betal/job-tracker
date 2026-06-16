@@ -15,6 +15,7 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 
 // Request logger to debug 404 issues
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -23,7 +24,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Routes
-app.use("/api", authRoutes);
+app.use("/api/user", authRoutes);
+console.log("✅ Auth routes file loaded!");
+
+authRoutes.stack.forEach((r: any) => {
+    if (r.route) {
+        console.log(`Route: ${Object.keys(r.route.methods)} ${r.route.path}`);
+    }
+});
 
 // Healthcheck
 app.get("/health", (req: Request, res: Response) => {

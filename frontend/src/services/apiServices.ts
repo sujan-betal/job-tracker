@@ -81,6 +81,15 @@ export const addContactService = async (callApi: any, data: any) => {
   });
 };
 
+export const updateContactService = async (callApi: any, id: string | number, data: any) => {
+  return await callApi({
+    url: JOBTRACKER_URLS.UPDATE_CONTACT(id),
+    method: "PUT",
+    body: data,
+    includeAuth: true,
+  });
+};
+
 export const deleteContactService = async (callApi: any, id: string | number) => {
   return await callApi({
     url: JOBTRACKER_URLS.DELETE_CONTACT(id),

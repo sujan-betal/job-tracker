@@ -595,3 +595,30 @@ export const deleteContact = async (req: Request, res: Response) => {
         return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to delete contact", res);
     }
 };
+
+export const updateContact = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const { name, role, company, email, phone, linkedIn } = req.body;
+
+        const contact = await Contact.findOne({ where: { id, userId } });
+        if (!contact) {
+            return apiResponseErr(null, false, StatusCode.notFound, "Contact not found", res);
+        }
+
+        await contact.update({
+            name,
+            role,
+            company,
+            email,
+            phone,
+            linkedIn,
+        });
+
+        return apiResponseSuccess(contact, true, StatusCode.success, "Contact updated successfully", res);
+    } catch (error: any) {
+        console.error("❌ [updateContact] Error:", error);
+        return apiResponseErr(null, false, StatusCode.internalServerError, "Failed to update contact", res);
+    }
+};

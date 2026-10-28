@@ -143,6 +143,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#080B10] text-slate-200 p-8 px-6 md:px-12 font-sans relative overflow-hidden">
+      {localStorage.getItem("demo_mode") === "true" && (
+        <div role="status" className="relative z-10 mb-6 rounded-xl border border-purple-500/20 bg-purple-500/10 px-4 py-3 text-sm font-medium text-purple-200">
+          Read-only demo · Sample applications only. Changes are not saved.
+        </div>
+      )}
       {/* Subtle Glows */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none"></div>
 

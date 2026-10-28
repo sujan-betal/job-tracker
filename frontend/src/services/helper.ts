@@ -38,6 +38,15 @@ export const makeCall = async (
   timeout: number = 10000,
   dispatch?: any
 ) => {
+  if (localStorage.getItem("demo_mode") === "true") {
+    return {
+      success: false,
+      errMessage: params.method === "GET"
+        ? "This page uses sample demo data."
+        : "This is a read-only demo. Changes are not saved.",
+    };
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   params.signal = controller.signal;

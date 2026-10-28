@@ -41,6 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const parsedUser = JSON.parse(storedUser);
           setToken(storedToken);
           setUser(parsedUser);
+
+          if (storedToken === "demo-read-only" && localStorage.getItem("demo_mode") === "true") {
+            setLoading(false);
+            return;
+          }
           
           // Proactively fetch latest profile to verify token validity
           const params = getCallParams("GET", null, true, storedToken);
@@ -79,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("demo_mode");
     setToken(null);
     setUser(null);
   };

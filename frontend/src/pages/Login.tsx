@@ -14,6 +14,13 @@ const Login = () => {
   const navigate = useNavigate();
   const { callApi } = useApiCall();
 
+  const handleDemoAccess = () => {
+    const demoUser = { id: 0, name: "Demo User", email: "demo@jobtracker.local" };
+    localStorage.setItem("demo_mode", "true");
+    login("demo-read-only", demoUser);
+    navigate("/dashboard", { replace: true });
+  };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -208,6 +215,15 @@ const Login = () => {
                   </div>
                 </button>
               </form>
+
+              <button
+                type="button"
+                onClick={handleDemoAccess}
+                className="mt-5 w-full rounded-xl border border-purple-400/30 bg-purple-500/10 px-4 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+              >
+                Explore read-only demo dashboard
+              </button>
+              <p className="mt-2 text-center text-xs text-gray-500">Sample data only · Changes are not saved</p>
 
               {/* Social Login Section (optional, matching register) */}
               <div className="mt-8">
